@@ -1,5 +1,9 @@
 const connection = require("../services/database");
 const User = require("../class/user");
+const jwt = require("jsonwebtoken");
+const dotenv= require('dotenv');
+dotenv.config({path: './.env'});
+const secret= process.env.JWT_SECRET_KEY;
 
 exports.login = async (req, res) => {
     const request = `SELECT * FROM users WHERE email = ? AND password = ?`;
@@ -9,10 +13,13 @@ exports.login = async (req, res) => {
         return res.status(500).json({ error: "Erreur lors de la récupération des données" });
         }
         if (results.length === 0) {
-        return res.status(404).json({ error: "Utilisateur non trouvé" });
+          console.log(request, values, results.length)
+        return res.status(404).json({ error: "Utilisateur non trouvé"});
         }
         const user = User.fromMap(results[0]);
-        return res.status(200).json({ dashboard: "user found" });
+        console.log(user);
+        const token = jwt.sign({ id: user.id, email: user.email }, secret, { expiresIn: "24h" });
+        return res.status(200).json({ dashboard: "user found", token: token});
     });
 };
 
